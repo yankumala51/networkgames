@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetMaster SMK - Kuis Interaktif Jaringan Statik</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Optional SCORM API Wrapper for Moodle LMS Integration -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pipwerks-scorm-api-wrapper/1.0.1/SCORM_API_wrapper.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            dark: '#0B0F19',
+                            card: '#151C2C',
+                            border: '#2A364F',
+                            accent: '#00F0FF',
+                            purple: '#7000FF',
+                            success: '#00FF87',
+                            danger: '#FF0055',
+                            warning: '#FFE600'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #E2E8F0;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(112, 0, 255, 0.05) 0%, transparent 40%);
+        }
+        .glow-accent {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+        }
+        .glow-success {
+            box-shadow: 0 0 20px rgba(0, 255, 135, 0.3);
+        }
+        .glow-danger {
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.3);
+        }
+        .animate-packet {
+            animation: movePacket 1.5s infinite linear;
+        }
+        @keyframes movePacket {
+            0% { stroke-dashoffset: 40; }
+            100% { stroke-dashoffset: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-cyber-accent selection:text-cyber-dark">
+
+    <header class="border-b border-cyber-border bg-cyber-dark/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-cyber-accent to-cyber-purple p-2.5 rounded-xl text-cyber-dark font-black text-xl shadow-lg">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-wide bg-gradient-to-r from-cyber-accent via-white to-cyber-purple bg-clip-text text-transparent">
+                        NETMASTER <span class="text-xs bg-cyber-purple/40 text-cyber-accent border border-cyber-accent/30 px-2 py-0.5 rounded-full font-mono">SMK TKJ</span>
+                    </h1>
+                    <p class="text-xs text-gray-400">Tantangan Routing & Konfigurasi Jaringan Statik</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="flex items-center gap-3 text-xs font-mono">
+                <div id="lms-badge" class="hidden md:flex bg-cyber-card border border-cyber-border px-2.5 py-1.5 rounded-lg items-center gap-1.5 text-gray-400">
+                    <i class="fa-solid fa-graduation-cap text-cyber-accent"></i>
+                    <span id="lms-status">Standalone</span>
+                </div>
+                <div class="bg-cyber-card border border-cyber-border px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-cyber-warning"></i>
+                    <span class="text-gray-400 hidden sm:inline">STREAK:</span>
+                    <span id="streak-val" class="font-bold text-cyber-warning">0</span>
+                </div>
+                <div class="bg-cyber-card border border-cyber-border px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-cyber-accent"></i>
+                    <span class="text-gray-400 hidden sm:inline">XP:</span>
+                    <span id="xp-val" class="font-bold text-cyber-accent">0</span>
+                </div>
+                <button id="sound-btn" onclick="toggleSound()" aria-label="Toggle Sound" class="bg-cyber-card border border-cyber-border p-2 rounded-lg text-gray-300 hover:text-cyber-accent transition">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-1 w-full flex flex-col justify-center">
+
+        <div id="start-screen" class="bg-cyber-card border border-cyber-border rounded-2xl p-6 md:p-10 shadow-2xl relative overflow-hidden text-center">
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-cyber-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-cyber-purple/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyber-accent/10 border border-cyber-accent/30 text-cyber-accent text-xs font-mono mb-4">
+                <i class="fa-solid fa-microchip"></i> MODUL TKJ: JARANGAN STATIK & ROUTING
+            </div>
+
+            <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
+                Uji Skill <span class="bg-gradient-to-r from-cyber-accent to-cyber-success bg-clip-text text-transparent">Administrator Jaringan</span> Muda!
+            </h2>
+            <p class="text-gray-400 max-w-2xl mx-auto text-sm md:text-base mb-8">
+                Pahami konsep Next-Hop, Gateway, Tabel Routing, hingga CLI Cisco/MikroTik. Selesaikan 10 skenario riil troubleshooting & konfigurasi statik jaringan SMK.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8 text-left font-mono text-xs">
+                <div class="bg-cyber-dark/60 border border-cyber-border p-4 rounded-xl">
+                    <i class="fa-solid fa-route text-cyber-accent text-lg mb-2"></i>
+                    <h3 class="font-bold text-white text-sm mb-1">Topologi Visual</h3>
+                    <p class="text-gray-400">Setiap soal dilengkapi diagram interaktif penentuan jalur data.</p>
+                </div>
+                <div class="bg-cyber-dark/60 border border-cyber-border p-4 rounded-xl">
+                    <i class="fa-solid fa-terminal text-cyber-success text-lg mb-2"></i>
+                    <h3 class="font-bold text-white text-sm mb-1">Sintaks CLI Real</h3>
+                    <p class="text-gray-400">Latihan perintah Cisco IOS & MikroTik RouterOS standar industri.</p>
+                </div>
+                <div class="bg-cyber-dark/60 border border-cyber-border p-4 rounded-xl">
+                    <i class="fa-solid fa-shield-halved text-cyber-warning text-lg mb-2"></i>
+                    <h3 class="font-bold text-white text-sm mb-1">Analisis Error</h3>
+                    <p class="text-gray-400">Pembahasan mendalam penyebab RTO, Unreachable, dan Loop.</p>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="bg-gradient-to-r from-cyber-accent to-cyber-purple hover:from-cyber-accent/90 hover:to-cyber-purple/90 text-cyber-dark font-black px-8 py-4 rounded-xl text-lg shadow-lg hover:shadow-cyber-accent/30 hover:scale-105 transition-all duration-200">
+                <i class="fa-solid fa-play mr-2"></i> MULAI TANTANGAN
+            </button>
+        </div>
+
+        <div id="quiz-screen" class="hidden flex-col gap-6">
+            
+            <!-- Progress Bar & Topic Tag -->
+            <div class="bg-cyber-card border border-cyber-border p-4 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <span id="question-badge" class="font-mono text-xs font-bold px-3 py-1 bg-cyber-purple/30 border border-cyber-purple text-cyber-accent rounded-md">
+                        SOAL 1/10
+                    </span>
+                    <span id="topic-tag" class="text-xs text-gray-400 font-mono">
+                        <i class="fa-solid fa-tag text-cyber-accent"></i> Konsep Dasar Static Routing
+                    </span>
+                </div>
+                
+                <div class="w-full md:w-1/2 flex items-center gap-3">
+                    <div class="w-full bg-cyber-dark rounded-full h-2.5 overflow-hidden border border-cyber-border">
+                        <div id="progress-bar" class="bg-gradient-to-r from-cyber-accent to-cyber-success h-2.5 rounded-full transition-all duration-500" style="width: 10%"></div>
+                    </div>
+                    <span id="progress-text" class="text-xs font-mono text-gray-400">10%</span>
+                </div>
+            </div>
+
+            <div id="topology-container" class="bg-cyber-card border border-cyber-border rounded-xl p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[180px]">
+                <div class="absolute top-2 left-3 text-[10px] font-mono text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                    <i class="fa-solid fa-eye text-cyber-accent"></i> Diagram Topologi Jaringan
+                </div>
+                <div id="svg-wrapper" class="w-full max-w-2xl py-2 flex justify-center">
+                    <!-- Dynamic SVG inserted via JS -->
+                </div>
+            </div>
+
+            <div class="bg-cyber-card border border-cyber-border rounded-xl p-6 shadow-xl">
+                <h2 id="question-text" class="text-lg md:text-xl font-bold text-white mb-3 leading-relaxed">
+                    <!-- Dynamic Question Text -->
+                </h2>
+
+                <div id="code-snippet-box" class="hidden mb-4 bg-cyber-dark border border-cyber-border rounded-lg p-3 font-mono text-xs text-cyber-accent overflow-x-auto">
+                    <pre id="code-text"><!-- Dynamic CLI Snippet --></pre>
+                </div>
+
+                <!-- Answer Option Buttons -->
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                    <!-- Dynamic Option Buttons -->
+                </div>
+
+                <!-- Hint Bar -->
+                <div class="mt-5 pt-4 border-t border-cyber-border/50 flex flex-wrap justify-between items-center gap-2">
+                    <button id="hint-btn" onclick="showHint()" class="text-xs font-mono text-gray-400 hover:text-cyber-warning flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-lightbulb"></i> Bantuan / Petunjuk
+                    </button>
+                    <span id="hint-text" class="hidden text-xs font-mono text-cyber-warning bg-cyber-warning/10 border border-cyber-warning/20 px-3 py-1 rounded-md"></span>
+                </div>
+            </div>
+
+            <div id="feedback-panel" class="hidden bg-cyber-card border rounded-xl p-5 shadow-2xl transition-all">
+                <div class="flex items-start gap-3">
+                    <div id="feedback-icon" class="text-2xl mt-0.5"></div>
+                    <div class="flex-1">
+                        <h3 id="feedback-title" class="font-bold text-base mb-1"></h3>
+                        <p id="feedback-rationale" class="text-xs md:text-sm text-gray-300 leading-relaxed font-sans mb-3"></p>
+                        <button onclick="nextQuestion()" class="bg-cyber-accent hover:bg-cyber-accent/80 text-cyber-dark font-bold text-xs px-5 py-2.5 rounded-lg font-mono flex items-center gap-2 transition">
+                            SOAL SELANJUTNYA <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="result-screen" class="hidden bg-cyber-card border border-cyber-border rounded-2xl p-6 md:p-10 text-center shadow-2xl">
+            <div id="result-badge-icon" class="text-5xl text-cyber-accent mb-3">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-white mb-2">Hasil Evaluasi Kuis</h2>
+            <p id="result-subtitle" class="text-gray-400 text-sm mb-6">Pencapaian Kompetensi Routing Statik SMK</p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mb-8 font-mono">
+                <div class="bg-cyber-dark border border-cyber-border p-3 rounded-xl">
+                    <p class="text-gray-400 text-xs">SKOR AKHIR</p>
+                    <p id="final-score" class="text-2xl font-black text-cyber-accent mt-1">0%</p>
+                </div>
+                <div class="bg-cyber-dark border border-cyber-border p-3 rounded-xl">
+                    <p class="text-gray-400 text-xs">BENAR / TOTAL</p>
+                    <p id="final-correct" class="text-2xl font-black text-cyber-success mt-1">0/10</p>
+                </div>
+                <div class="bg-cyber-dark border border-cyber-border p-3 rounded-xl">
+                    <p class="text-gray-400 text-xs">TOTAL XP</p>
+                    <p id="final-xp" class="text-2xl font-black text-cyber-warning mt-1">0</p>
+                </div>
+                <div class="bg-cyber-dark border border-cyber-border p-3 rounded-xl">
+                    <p class="text-gray-400 text-xs">PREDIKAT TKJ</p>
+                    <p id="final-rank" class="text-xs font-bold text-cyber-purple mt-2">Junior Admin</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <button onclick="restartQuiz()" class="bg-gradient-to-r from-cyber-accent to-cyber-purple text-cyber-dark font-bold px-6 py-3 rounded-xl text-sm font-mono flex items-center justify-center gap-2 hover:scale-105 transition">
+                    <i class="fa-solid fa-rotate-right"></i> ULANGI KUIS
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="border-t border-cyber-border/50 py-4 text-center text-xs text-gray-500 font-mono">
+        NetMaster SMK &copy; Modul Pembelajaran Jaringan Komputer TKJ
+    </footer>
+
+    <script>
+        let soundEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'correct') {
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'wrong') {
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }
+            } catch (e) {
+                console.log("Audio playback deferred until user interaction.");
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            icon.className = soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-gray-600';
+        }
+
+        let scormActive = false;
+
+        window.onload = function() {
+            if (typeof pipwerks !== 'undefined' && pipwerks.SCORM) {
+                scormActive = pipwerks.SCORM.init();
+                if (scormActive) {
+                    const lmsBadge = document.getElementById('lms-badge');
+                    const lmsStatus = document.getElementById('lms-status');
+                    if (lmsBadge && lmsStatus) {
+                        lmsBadge.classList.remove('hidden');
+                        lmsStatus.innerText = 'Connected to Moodle';
+                        lmsStatus.classList.add('text-cyber-success');
+                    }
+                }
+            }
+        };
+
+        function sendScoreToSCORM(scorePercent) {
+            if (scormActive && typeof pipwerks !== 'undefined') {
+                pipwerks.SCORM.set("cmi.core.score.raw", scorePercent);
+                if (scorePercent >= 70) {
+                    pipwerks.SCORM.set("cmi.core.lesson_status", "passed");
+                } else {
+                    pipwerks.SCORM.set("cmi.core.lesson_status", "failed");
+                }
+                pipwerks.SCORM.save();
+                pipwerks.SCORM.quit();
+            }
+        }
+
+        const quizData = [
+            {
+                topic: "Konsep Next-Hop",
+                question: "Pada topologi di bawah, Router Utama (R1) ingin mengirim paket data ke PC-B (192.168.20.0/24). Alamat Next-Hop IP yang harus dikonfigurasi pada tabel routing R1 adalah...",
+                code: "Cisco CLI:\nR1(config)# ip route 192.168.20.0 255.255.255.0 [NEXT_HOP]",
+                svgType: "r1-r2-pc",
+                options: [
+                    { text: "10.10.10.2", isCorrect: true, rationale: "Next-Hop adalah alamat IP interface router tetangga (R2) yang terhubung langsung dengan R1 pada segment 10.10.10.0/30." },
+                    { text: "10.10.10.1", isCorrect: false, rationale: "10.10.10.1 adalah IP interface lokal milik R1 sendiri, bukan IP tetangga (Next-Hop)." },
+                    { text: "192.168.20.1", isCorrect: false, rationale: "192.168.20.1 adalah Gateway PC-B pada R2, bukan IP interface tetangga yang berada dalam satu segmen dengan R1." },
+                    { text: "192.168.10.1", isCorrect: false, rationale: "192.168.10.1 adalah IP LAN milik PC-A di sebelah kiri R1." }
+                ],
+                hint: "Pilihlah alamat IP router sebelah (R2) yang berada pada kabel penghubung serial/Ethernet antar-router."
+            },
+            {
+                topic: "Default Route / Internet Access",
+                question: "Administrator jaringan SMK ingin mengarahkan seluruh trafik yang alamat tujuan IP-nya tidak ada dalam tabel routing menuju ISP. Perintah Cisco IOS yang tepat adalah...",
+                code: "R1(config)# ip route [NETMASK_NILAI] [NEXT_HOP_ISP]",
+                svgType: "r1-isp",
+                options: [
+                    { text: "ip route 0.0.0.0 0.0.0.0 202.152.0.1", isCorrect: true, rationale: "Perintah Default Route menggunakan Network 0.0.0.0 dan Netmask 0.0.0.0 (quad-zero) untuk mencakup semua destinasi yang tidak terdaftar." },
+                    { text: "ip route 255.255.255.255 0.0.0.0 202.152.0.1", isCorrect: false, rationale: "Subnet mask 255.255.255.255 merepresentasikan alamat host spesifik, bukan default route." },
+                    { text: "ip route 192.168.0.0 255.255.0.0 202.152.0.1", isCorrect: false, rationale: "Ini hanya mencakup segmen 192.168.0.0/16, bukan seluruh lalu lintas publik internet." },
+                    { text: "ip route default 255.255.255.255 202.152.0.1", isCorrect: false, rationale: "Kata kunci 'default' bukan format sintaks perintah routing statik baku pada Cisco IOS." }
+                ],
+                hint: "Default route dikenal juga sebagai 'Quad Zero Route'."
+            },
+            {
+                topic: "Konfigurasi Router MikroTik",
+                question: "Di lab jaringan SMK, siswa mengonfigurasi routing statik pada MikroTik RouterOS melalui CLI. Perintah yang tepat untuk menambah static route ke jaringan 172.16.10.0/24 via gateway 10.0.0.1 adalah...",
+                code: "[admin@MikroTik] > /ip route add ...",
+                svgType: "mikrotik-std",
+                options: [
+                    { text: "/ip route add dst-address=172.16.10.0/24 gateway=10.0.0.1", isCorrect: true, rationale: "Sintaks MikroTik RouterOS mewajibkan parameter dst-address (beserta prefix /24) dan gateway." },
+                    { text: "/ip route add destination=172.16.10.0 netmask=255.255.255.0 gateway=10.0.0.1", isCorrect: false, rationale: "MikroTik menggunakan format CIDR (dst-address=x.x.x.x/yy), bukan parameter netmask terpisah seperti Cisco." },
+                    { text: "/ip route set target=172.16.10.0/24 via=10.0.0.1", isCorrect: false, rationale: "Kata kunci 'target' dan 'via' tidak digunakan dalam sintaks baku /ip route MikroTik." },
+                    { text: "/ip route add ip-destination=172.16.10.0/24 next-hop=10.0.0.1", isCorrect: false, rationale: "Parameter yang benar untuk IP tetangga di MikroTik adalah 'gateway', bukan 'next-hop'." }
+                ],
+                hint: "Perhatikan nama parameter standar MikroTik: 'dst-address' dan 'gateway'."
+            },
+            {
+                topic: "Administrative Distance (AD)",
+                question: "Router menerima dua jalur menuju subnet yang sama: satu dari Static Route (AD = 1) dan satu dari OSPF (AD = 110). Manakah jalur yang akan dimasukkan ke dalam Active Routing Table?",
+                code: "Static Route: AD = 1\nOSPF Route  : AD = 110",
+                svgType: "ad-compare",
+                options: [
+                    { text: "Jalur Static Route", isCorrect: true, rationale: "Router selalu memprioritaskan rute dengan nilai Administrative Distance (AD) paling KECIL karena dianggap lebih tepercaya." },
+                    { text: "Jalur OSPF", isCorrect: false, rationale: "Nilai AD OSPF (110) lebih besar dibanding Static Route (1), sehingga kalah prioritas." },
+                    { text: "Kedua jalur dipakai bergantian (Load Balancing)", isCorrect: false, rationale: "Load balancing hanya terjadi jika nilai AD dan Metric kedua jalur identik." },
+                    { text: "Router mengalami crash karena konflik rute", isCorrect: false, rationale: "Nilai AD memang dirancang untuk menyelesaikan konflik pemilihan jalur secara otomatis." }
+                ],
+                hint: "Aturan dasar AD: Semakin kecil nilainya, semakin tinggi tingkat prioritasnya."
+            },
+            {
+                topic: "Floating Static Route",
+                question: "Untuk membuat jalur cadangan (backup) menggunakan static route ketika jalur utama OSPF (AD 110) putus, berapakah nilai Administrative Distance yang harus diberikan pada static route tersebut?",
+                code: "Jalur Utama (OSPF)  : AD = 110\nJalur Backup (Static): AD = [???]",
+                svgType: "floating-route",
+                options: [
+                    { text: "130 (Lebih besar dari 110)", isCorrect: true, rationale: "Floating static route bekerja dengan menetapkan nilai AD lebih besar dari jalur utama, sehingga rute baru aktif saat jalur utama mati." },
+                    { text: "1 (Default static route)", isCorrect: false, rationale: "Jika AD bernilai 1, maka static route justru akan menggantikan OSPF sebagai jalur utama." },
+                    { text: "0 (Directly connected)", isCorrect: false, rationale: "AD 0 adalah nilai terendah untuk jaringan terhubung langsung, bukan rute cadangan." },
+                    { text: "100 (Lebih kecil dari 110)", isCorrect: false, rationale: "Nilai AD 100 masih lebih kecil dari 110, sehingga akan terus dipakai mengalahkan OSPF." }
+                ],
+                hint: "Jalur cadangan hanya boleh aktif jika jalur utama mati, berarti AD-nya harus LEBIH BESAR."
+            },
+            {
+                topic: "Troubleshooting Jaringan",
+                question: "PC-A (192.168.10.2) melakukan ping ke PC-B (192.168.20.2) dan mendapatkan balasan 'Destination Host Unreachable' dari Router R1 (192.168.10.1). Penyebab utamanya adalah...",
+                code: "Reply from 192.168.10.1: Destination host unreachable.",
+                svgType: "ping-unreachable",
+                options: [
+                    { text: "Tabel routing R1 tidak memiliki rute menuju 192.168.20.0/24", isCorrect: true, rationale: "Pesan 'Destination Host Unreachable' dari gateway menandakan router lokal tidak tahu kemana harus meneruskan paket (missing route)." },
+                    { text: "Kabel UTP antara PC-B dan Switch terputus total", isCorrect: false, rationale: "Jika kabel terputus di ujung target, respons biasanya berupa 'Request Timed Out' (RTO) dari perangkat terdekat, bukan Unreachable langsung dari R1." },
+                    { text: "IP Address PC-A bentrok dengan PC lain", isCorrect: false, rationale: "IP Conflict memberikan peringatan pada Sistem Operasi PC-A, bukan pesan ICMP Unreachable." },
+                    { text: "Subnet mask PC-A salah diketik", isCorrect: false, rationale: "Jika mask PC-A salah, paket bahkan tidak bisa dikirimkan ke Gateway 192.168.10.1." }
+                ],
+                hint: "Lihat siapa yang menjawab: 'Reply from 192.168.10.1' (Router R1 mengaku tidak kenal jalan ke target)."
+            },
+            {
+                topic: "Exit Interface vs Next-Hop",
+                question: "Pada link Point-to-Point (misal Serial connection), penulisan static route menggunakan Exit Interface seperti `ip route 192.168.20.0 255.255.255.0 Serial0/0/0` diperbolehkan karena...",
+                code: "R1(config)# ip route 192.168.20.0 255.255.255.0 Serial0/0/0",
+                svgType: "p2p-link",
+                options: [
+                    { text: "Hanya ada satu router penerima di ujung segmen Point-to-Point", isCorrect: true, rationale: "Pada koneksi Point-to-Point, seluruh trafik yang keluar dari interface pasti sampai ke router tetangga tunggal di ujung lainnya." },
+                    { text: "Koneksi Point-to-Point tidak membutuhkan alamat IP sama sekali", isCorrect: false, rationale: "IP address tetap diperlukan untuk identifikasi layer 3." },
+                    { text: "Perintah ini otomatis mengubah static route menjadi dynamic routing", isCorrect: false, rationale: "Metode penulisan interface tidak mengubah sifat statik menjadi dinamis." },
+                    { text: "Exit interface meningkatkan kecepatan enkripsi data", isCorrect: false, rationale: "Exit interface tidak berkaitan langsung dengan enkripsi data." }
+                ],
+                hint: "Pikirkan kata 'Point-to-Point' (Titik ke Titik): Tidak ada pilihan tetangga lain di kabel tersebut."
+            },
+            {
+                topic: "Routing Loop Prevention",
+                question: "Routing Loop pada Static Routing terjadi ketika...",
+                code: "R1 menunjuk R2 -> R2 menunjuk R1 -> Packet Berputar!",
+                svgType: "routing-loop",
+                options: [
+                    { text: "Dua router saling menunjuk satu sama lain sebagai Next-Hop untuk jaringan yang sama", isCorrect: true, rationale: "Konfigurasi yang salah dapat menyebabkan paket diputar berulang kali antara R1 dan R2 hingga nilai TTL habis." },
+                    { text: "Router kehabisan memori RAM saat membaca tabel routing", isCorrect: false, rationale: "RAM habis tidak menyebabkan loop pemutaran paket data." },
+                    { text: "Jumlah router dalam satu jaringan melebihi 255 unit", isCorrect: false, rationale: "Batas 255 berkaitan dengan nilai TTL pada header IP, bukan penyebab utama loop." },
+                    { text: "IP Address FastEthernet dikonfigurasi sama dengan IP Loopback", isCorrect: false, rationale: "Duplikasi IP lokal akan memicu error perselisihan interface, bukan routing loop antar router." }
+                ],
+                hint: "Loop = Berputar-putar tanpa henti antara dua titik."
+            },
+            {
+                topic: "Penyederhanaan Tabel Routing (Summarization)",
+                question: "Router R1 memiliki 4 static route: 10.1.0.0/24, 10.1.1.0/24, 10.1.2.0/24, dan 10.1.3.0/24. Jika keempat rute ini dirangkum (summarize) menjadi 1 baris rute statik, netmask ringkasannya adalah...",
+                code: "10.1.0.0/24\n10.1.1.0/24\n10.1.2.0/24\n10.1.3.0/24  ===> Summarize menjadi 10.1.0.0/??",
+                svgType: "summarization",
+                options: [
+                    { text: "10.1.0.0/22 (255.255.252.0)", isCorrect: true, rationale: "4 subnet /24 dapat digabungkan menjadi blok /22 (mencakup 4x256 IP = 1024 IP dari 10.1.0.0 hingga 10.1.3.255)." },
+                    { text: "10.1.0.0/16 (255.255.0.0)", isCorrect: false, rationale: "Prefix /16 terlalu luas karena mencakup 10.1.0.0 hingga 10.1.255.255." },
+                    { text: "10.1.0.0/23 (255.255.254.0)", isCorrect: false, rationale: "Prefix /23 hanya mencakup 2 subnet /24 (10.1.0.0 dan 10.1.1.0)." },
+                    { text: "10.1.0.0/20 (255.255.240.0)", isCorrect: false, rationale: "Prefix /20 mencakup 16 subnet /24, terlalu besar untuk 4 subnet ini." }
+                ],
+                hint: "4 subnet /24 membutuhkan 2 bit gabungan pada oktet ketiga (32 - 8 - 2 = 22)."
+            },
+            {
+                topic: "Studi Kasus Jaringan SMK",
+                question: "Gedung Lab TKJ SMK memiliki Router R-Lab. Agar PC Client di Lab (192.168.50.0/24) bisa mengakses Server Perpustakaan (172.16.2.10/24) via Router R-Pusat (IP Inter-router 10.10.10.2), perintah CLI Cisco di R-Lab adalah...",
+                code: "R-Lab(config)# ip route [DEST_NET] [NETMASK] [NEXT_HOP]",
+                svgType: "smk-case",
+                options: [
+                    { text: "ip route 172.16.2.0 255.255.255.0 10.10.10.2", isCorrect: true, rationale: "Tujuan adalah network Server Perpus (172.16.2.0/24) melalui IP router tetangga R-Pusat (10.10.10.2)." },
+                    { text: "ip route 192.168.50.0 255.255.255.0 10.10.10.2", isCorrect: false, rationale: "192.168.50.0 adalah network lokal R-Lab sendiri, tidak perlu diketik dalam static route." },
+                    { text: "ip route 172.16.2.10 255.255.255.255 192.168.50.1", isCorrect: false, rationale: "192.168.50.1 adalah IP lokal gateway PC, bukan Next-Hop router tetangga." },
+                    { text: "ip route 10.10.10.0 255.255.255.252 172.16.2.1", isCorrect: false, rationale: "Sintaks ini terbalik antara jaringan tujuan dan next-hop." }
+                ],
+                hint: "Format standar Cisco: ip route [NETWORK_TUJUAN] [SUBNET_MASK] [IP_NEXT_HOP]"
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let xp = 0;
+        let streak = 0;
+        let userAnswers = [];
+
+        function renderSVG(type) {
+            const svgContainer = document.getElementById('svg-wrapper');
+            let svgHtml = '';
+
+            switch(type) {
+                case 'r1-r2-pc':
+                    svgHtml = `
+                    <svg viewBox="0 0 600 120" class="w-full h-auto">
+                        <line x1="80" y1="60" x2="220" y2="60" stroke="#2A364F" stroke-width="4"/>
+                        <line x1="220" y1="60" x2="380" y2="60" stroke="#00F0FF" stroke-width="3" stroke-dasharray="6" class="animate-packet"/>
+                        <line x1="380" y1="60" x2="520" y2="60" stroke="#2A364F" stroke-width="4"/>
+                        
+                        <rect x="30" y="40" width="50" height="40" rx="6" fill="#151C2C" stroke="#00F0FF" stroke-width="2"/>
+                        <text x="55" y="65" font-family="monospace" font-size="10" fill="#00F0FF" text-anchor="middle">PC-A</text>
+                        <text x="55" y="95" font-family="monospace" font-size="8" fill="#94A3B8" text-anchor="middle">192.168.10.2</text>
+
+                        <circle cx="220" cy="60" r="24" fill="#151C2C" stroke="#00FF87" stroke-width="2"/>
+                        <text x="220" y="64" font-family="monospace" font-size="11" font-weight="bold" fill="#00FF87" text-anchor="middle">R1</text>
+                        <text x="220" y="25" font-family="monospace" font-size="8" fill="#94A3B8" text-anchor="middle">10.10.10.1</text>
+
+                        <circle cx="380" cy="60" r="24" fill="#151C2C" stroke="#7000FF" stroke-width="2"/>
+                        <text x="380" y="64" font-family="monospace" font-size="11" font-weight="bold" fill="#7000FF" text-anchor="middle">R2</text>
+                        <text x="380" y="25" font-family="monospace" font-size="8" fill="#00F0FF" text-anchor="middle">10.10.10.2 (Next-Hop)</text>
+
+                        <rect x="520" y="40" width="50" height="40" rx="6" fill="#151C2C" stroke="#7000FF" stroke-width="2"/>
+                        <text x="545" y="65" font-family="monospace" font-size="10" fill="#7000FF" text-anchor="middle">PC-B</text>
+                        <text x="545" y="95" font-family="monospace" font-size="8" fill="#94A3B8" text-anchor="middle">192.168.20.2</text>
+                    </svg>`;
+                    break;
+                case 'r1-isp':
+                    svgHtml = `
+                    <svg viewBox="0 0 500 120" class="w-full h-auto">
+                        <line x1="100" y1="60" x2="250" y2="60" stroke="#00F0FF" stroke-width="3"/>
+                        <line x1="250" y1="60" x2="400" y2="60" stroke="#FFE600" stroke-width="3" stroke-dasharray="5"/>
+                        
+                        <rect x="40" y="40" width="60" height="40" rx="6" fill="#151C2C" stroke="#00F0FF" stroke-width="2"/>
+                        <text x="70" y="64" font-family="monospace" font-size="10" fill="#00F0FF" text-anchor="middle">LAN SMK</text>
+
+                        <circle cx="250" cy="60" r="24" fill="#151C2C" stroke="#00FF87" stroke-width="2"/>
+                        <text x="250" y="64" font-family="monospace" font-size="11" font-weight="bold" fill="#00FF87" text-anchor="middle">R1-SMK</text>
+
+                        <path d="M 370 60 Q 380 40 400 40 Q 420 30 440 50 Q 460 60 440 80 Q 410 90 380 75 Z" fill="#151C2C" stroke="#FFE600" stroke-width="2"/>
+                        <text x="410" y="62" font-family="monospace" font-size="10" fill="#FFE600" text-anchor="middle">INTERNET / ISP</text>
+                        <text x="325" y="50" font-family="monospace" font-size="8" fill="#94A3B8" text-anchor="middle">202.152.0.1</text>
+                    </svg>`;
+                    break;
+                default:
+                    svgHtml = `
+                    <svg viewBox="0 0 500 100" class="w-full h-auto">
+                        <line x1="80" y1="50" x2="250" y2="50" stroke="#2A364F" stroke-width="4"/>
+                        <line x1="250" y1="50" x2="420" y2="50" stroke="#2A364F" stroke-width="4"/>
+                        <circle cx="80" cy="50" r="20" fill="#151C2C" stroke="#00F0FF" stroke-width="2"/>
+                        <circle cx="250" cy="50" r="20" fill="#151C2C" stroke="#00FF87" stroke-width="2"/>
+                        <circle cx="420" cy="50" r="20" fill="#151C2C" stroke="#7000FF" stroke-width="2"/>
+                        <text x="80" y="54" font-family="monospace" font-size="9" fill="#00F0FF" text-anchor="middle">Node A</text>
+                        <text x="250" y="54" font-family="monospace" font-size="9" fill="#00FF87" text-anchor="middle">Router</text>
+                        <text x="420" y="54" font-family="monospace" font-size="9" fill="#7000FF" text-anchor="middle">Node B</text>
+                    </svg>`;
+            }
+            svgContainer.innerHTML = svgHtml;
+        }
+
+        function startQuiz() {
+            playSound('click');
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.add('flex');
+            
+            currentIdx = 0;
+            score = 0;
+            xp = 0;
+            streak = 0;
+            userAnswers = [];
+
+            updateStatsDisplay();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const item = quizData[currentIdx];
+
+            document.getElementById('feedback-panel').classList.add('hidden');
+            document.getElementById('hint-text').classList.add('hidden');
+            document.getElementById('hint-text').innerText = '';
+
+            document.getElementById('question-badge').innerText = `SOAL ${currentIdx + 1}/${quizData.length}`;
+            document.getElementById('topic-tag').innerHTML = `<i class="fa-solid fa-tag text-cyber-accent"></i> ${item.topic}`;
+            
+            const progressPct = ((currentIdx + 1) / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPct}%`;
+            document.getElementById('progress-text').innerText = `${Math.round(progressPct)}%`;
+
+            renderSVG(item.svgType);
+
+            document.getElementById('question-text').innerText = item.question;
+            
+            const codeBox = document.getElementById('code-snippet-box');
+            if (item.code) {
+                document.getElementById('code-text').innerText = item.code;
+                codeBox.classList.remove('hidden');
+            } else {
+                codeBox.classList.add('hidden');
+            }
+
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            item.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn w-full bg-cyber-dark hover:bg-cyber-border/60 border border-cyber-border text-left p-3.5 rounded-xl transition flex items-center gap-3 group`;
+                btn.onclick = () => selectOption(idx);
+
+                btn.innerHTML = `
+                    <span class="w-7 h-7 rounded-lg bg-cyber-card border border-cyber-border flex items-center justify-center font-mono text-xs font-bold text-cyber-accent group-hover:border-cyber-accent transition">
+                        ${letters[idx]}
+                    </span>
+                    <span class="text-xs md:text-sm text-gray-200 flex-1 font-sans">${opt.text}</span>
+                `;
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function showHint() {
+            playSound('click');
+            const hintElem = document.getElementById('hint-text');
+            hintElem.innerText = quizData[currentIdx].hint;
+            hintElem.classList.remove('hidden');
+        }
+
+        function selectOption(selectedIdx) {
+            const item = quizData[currentIdx];
+            const optBtns = document.querySelectorAll('.option-btn');
+            
+            optBtns.forEach(btn => btn.disabled = true);
+
+            const isCorrect = item.options[selectedIdx].isCorrect;
+
+            if (isCorrect) {
+                playSound('correct');
+                score++;
+                streak++;
+                xp += 100 + (streak * 20);
+                
+                optBtns[selectedIdx].classList.add('border-cyber-success', 'bg-cyber-success/10', 'glow-success');
+            } else {
+                playSound('wrong');
+                streak = 0;
+                optBtns[selectedIdx].classList.add('border-cyber-danger', 'bg-cyber-danger/10', 'glow-danger');
+                
+                item.options.forEach((opt, idx) => {
+                    if (opt.isCorrect) {
+                        optBtns[idx].classList.add('border-cyber-success', 'bg-cyber-success/10');
+                    }
+                });
+            }
+
+            userAnswers.push({ questionIdx: currentIdx, selectedIdx, isCorrect });
+            updateStatsDisplay();
+
+            showFeedback(isCorrect, item.options[selectedIdx].rationale);
+        }
+
+        function showFeedback(isCorrect, rationaleText) {
+            const panel = document.getElementById('feedback-panel');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const rationale = document.getElementById('feedback-rationale');
+
+            panel.classList.remove('hidden');
+
+            if (isCorrect) {
+                panel.className = "bg-cyber-card border border-cyber-success/50 rounded-xl p-5 shadow-2xl transition-all";
+                icon.innerHTML = `<i class="fa-solid fa-circle-check text-cyber-success"></i>`;
+                title.className = "font-bold text-base text-cyber-success mb-1";
+                title.innerText = "Jawaban Tepat! (+XP Bonus)";
+            } else {
+                panel.className = "bg-cyber-card border border-cyber-danger/50 rounded-xl p-5 shadow-2xl transition-all";
+                icon.innerHTML = `<i class="fa-solid fa-circle-xmark text-cyber-danger"></i>`;
+                title.className = "font-bold text-base text-cyber-danger mb-1";
+                title.innerText = "Jawaban Kurang Tepat";
+            }
+
+            rationale.innerText = rationaleText;
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('xp-val').innerText = xp;
+            document.getElementById('streak-val').innerText = streak;
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentIdx++;
+            if (currentIdx < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const total = quizData.length;
+            const pct = Math.round((score / total) * 100);
+
+            document.getElementById('final-score').innerText = `${pct}%`;
+            document.getElementById('final-correct').innerText = `${score}/${total}`;
+            document.getElementById('final-xp').innerText = xp;
+
+            let rank = 'Pemula Jaringan';
+            let rankColor = 'text-gray-400';
+
+            if (pct >= 90) {
+                rank = 'Senior NetAdmin SMK';
+                rankColor = 'text-cyber-accent';
+            } else if (pct >= 70) {
+                rank = 'Junior NetAdmin';
+                rankColor = 'text-cyber-success';
+            } else if (pct >= 50) {
+                rank = 'Teknisi Magang';
+                rankColor = 'text-cyber-warning';
+            }
+
+            const rankElem = document.getElementById('final-rank');
+            rankElem.innerText = rank;
+            rankElem.className = `text-xs font-bold mt-2 ${rankColor}`;
+
+            // Send score to Moodle LMS if SCORM is present
+            sendScoreToSCORM(pct);
+        }
+
+        function restartQuiz() {
+            playSound('click');
+            document.getElementById('result-screen').classList.add('hidden');
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
